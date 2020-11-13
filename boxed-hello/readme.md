@@ -3,6 +3,7 @@
 * 指定gradle 包的来源
 * 预先下载一个gradle 包
 * 拿到一个自构建的project 如何执行
+* 如何让gradle 产生的临时文件直接放到项目内
 
 ### gradle init 产生的文件
 1. gradle/gradle-wrapper.jar
@@ -38,3 +39,7 @@
     * 如果嫌下载慢，可以打开 gradle/wget_gradle_all_package.sh，拿到下载地址和目标路径
     * 手动下载该文件后，复制到目标路径
 3. ./gradlew tasks --all
+
+### 修改gradle user home 到项目内
+1. gradle.properties 文件内添加 systemProp.gradle.user.home=gradle/user/home
+2. 修改以后就会发现产生的临时文件都在这里
