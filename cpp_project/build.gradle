@@ -1,0 +1,11 @@
+plugins {
+    id "cpp-application"
+    id "cpp-unit-test"
+}
+version = project.main_version
+
+application {
+    targetMachines.add(machines.macOS.x86_64)
+    targetMachines.add(machines.linux.x86_64)
+    targetMachines.add(machines.windows.x86_64)
+}
