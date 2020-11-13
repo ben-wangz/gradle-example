@@ -1,0 +1,62 @@
+buildscript {
+    repositories {
+        maven { url "https://maven.aliyun.com/repository/public" }
+        maven { url "https://maven.aliyun.com/repository/spring" }
+        maven { url "https://maven.aliyun.com/repository/mapr-public" }
+        maven { url "https://maven.aliyun.com/repository/spring-plugin" }
+        maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url "https://maven.aliyun.com/repository/jcenter" }
+
+        mavenLocal()
+        mavenCentral()
+    }
+}
+plugins {
+    id "java"
+}
+ext {
+    aliyun_repositories = buildscript.repositories
+}
+version = project.main_version
+
+task sayHello {
+    doLast() {
+        println("hello world: ${new Date()}")
+    }
+}
+def jarName = "${project.getName()}-with-dependencies"
+jar {
+    manifest {
+        attributes "Main-Class": "cn.example.hello.App"
+    }
+    setArchivesBaseName(jarName)
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+def jarPath = project.file("build/libs/${jarName}-${project.getVersion()}.jar").getAbsolutePath()
+task printJarPath{
+    doLast{
+        println("jarPath: ${jarPath}")
+    }
+}
+task sayHelloWithJar(type: Exec) {
+    executable("java")
+    args(
+            "-jar", jarPath,
+    )
+    doFirst {
+        println("running command: ${String.join(" ", getCommandLine())}")
+    }
+    dependsOn(jar)
+}
+repositories.clear()
+repositories.addAll(aliyun_repositories)
+allprojects {
+    task printInfo {
+        doLast {
+            println("in ${project.getName()} version: ${project.getVersion()}")
+        }
+    }
+}

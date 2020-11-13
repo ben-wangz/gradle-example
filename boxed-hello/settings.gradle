@@ -1,0 +1,2 @@
+rootProject.name = "boxed-hello"
+// include "sub_module"
