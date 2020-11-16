@@ -1,0 +1,50 @@
+buildscript {
+    repositories {
+        maven { url "https://maven.aliyun.com/repository/public" }
+        maven { url "https://maven.aliyun.com/repository/spring" }
+        maven { url "https://maven.aliyun.com/repository/mapr-public" }
+        maven { url "https://maven.aliyun.com/repository/spring-plugin" }
+        maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url "https://maven.aliyun.com/repository/jcenter" }
+
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.h2database:h2:1.4.190")
+        classpath("org.apache.commons:commons-lang3:3.11")
+    }
+}
+
+
+import org.apache.commons.lang3.RandomStringUtils
+
+import java.sql.*
+
+task gradleCallJava() {
+    doLast {
+        println(RandomStringUtils.randomAlphabetic(16))
+
+        Class<Driver> driverClass = this.class.getClassLoader().loadClass("org.h2.Driver")
+        Driver instance = driverClass.newInstance()
+        Connection connection
+        try {
+            connection = instance.connect(
+                    "jdbc:h2:${project.file("build/tmp/runtime/test.db")}",
+                    new Properties())
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT 1+1")
+            if (resultSet.next()) {
+                System.out.println(resultSet.getInt(1));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace()
+            throw new RuntimeException(ex)
+        } finally {
+            if (null != connection) {
+                connection.close()
+            }
+        }
+    }
+}
