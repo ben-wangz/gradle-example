@@ -1,0 +1,47 @@
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic
+
+buildscript {
+    repositories aliyun_repositories
+    dependencies {
+        classpath "org.apache.commons:commons-lang3:3.0"
+    }
+}
+plugins {
+    id "org.springframework.boot" version "2.2.2.RELEASE"
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
+    id "java"
+}
+repositories.clear()
+repositories.addAll(buildscript.repositories)
+
+group = "${project.main_group}.${project.getName()}"
+sourceCompatibility = project.java_version
+targetCompatibility = project.java_version
+version = project.main_version
+
+dependencies {
+    implementation(project(":backend:common"))
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("com.google.guava:guava:29.0-jre")
+    implementation("org.apache.commons:commons-lang3:3.0")
+    testImplementation("junit:junit:4.12")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+    }
+}
+
+test {
+    useJUnit()
+}
+
+task runWithJar(type: Exec) {
+    executable("java")
+    args(
+            "-jar", project.file("build/libs/${project.getName()}-${project.getVersion()}.jar").getAbsolutePath(),
+    )
+    doFirst {
+        println("running command: ${String.join(" ", getCommandLine())}")
+        println("access with chrome: http://localhost:8080/greeting?username=${randomAlphabetic(8)}")
+    }
+    dependsOn(bootJar)
+}

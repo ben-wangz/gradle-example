@@ -1,0 +1,5 @@
+rootProject.name = "integration"
+include "frontend"
+include "backend:common"
+include "backend:web"
+include "docker"

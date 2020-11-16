@@ -1,0 +1,118 @@
+/************ groovy functions ************/
+def dockerContainerExists(String containerName) {
+    def execResult = exec {
+        commandLine("docker")
+        args("inspect", containerName)
+        ignoreExitValue(true)
+    }
+    return 0 == execResult.getExitValue()
+}
+
+def startDockerContainer(String webDockerName, String webImage) {
+    exec {
+        commandLine("docker")
+        args(
+                "run", "--rm",
+                "-p", "8080:8080",
+                "--name", webDockerName,
+                "-d", webImage,
+        )
+    }
+}
+
+def stopDockerContainer(String webDockerName) {
+    exec {
+        commandLine("docker")
+        args("kill", webDockerName)
+    }
+}
+/************ groovy functions ends ************/
+
+version = project.main_version
+def httpProxy = java.util.Optional.ofNullable(System.getenv("http_proxy")).orElse("")
+def httpsProxy = java.util.Optional.ofNullable(System.getenv("https_proxy")).orElse("")
+
+def baseImageName = "example_base:${project.getVersion()}"
+task buildBaseImage(type: Exec) {
+    executable("docker")
+    args(
+            "build", "${project.file("base")}",
+            "-f", "${project.file("base/base.dockerfile")}",
+            "--build-arg", "http_proxy=${httpProxy}",
+            "--build-arg", "https_proxy=${httpsProxy}",
+            "-t", baseImageName,
+    )
+    doFirst {
+        println(String.format("running command: %s", String.join(" ", getCommandLine())))
+    }
+}
+def webImage = "web:${project.getVersion()}"
+task copyFrontend(type: Copy) {
+    from "${project(":frontend").file("dist").getAbsolutePath()}"
+    into "build/frontend"
+    dependsOn(":frontend:yarnBuild")
+}
+def webProject = project(":backend:web")
+def bootJarFile = webProject.file("build/libs/${webProject.getName()}-${webProject.getVersion()}.jar")
+task copyBackend(type: Copy) {
+    from "${bootJarFile.getAbsolutePath()}"
+    into "build/backend"
+    dependsOn(":backend:web:bootJar")
+}
+task buildWebImage(type: Exec) {
+    executable("docker")
+    args(
+            "build", "${project.file(".")}",
+            "-f", "${project.file("web/web.dockerfile")}",
+            "--build-arg", "http_proxy=${httpProxy}",
+            "--build-arg", "https_proxy=${httpsProxy}",
+            "--build-arg", "BASE_IMAGE=${baseImageName}",
+            "--build-arg", "BOOT_JAR_NAME=${bootJarFile.getName()}",
+            "-t", webImage,
+    )
+    doFirst {
+        println("running command: ${String.join(" ", getCommandLine())}")
+    }
+    dependsOn(buildBaseImage)
+    dependsOn(copyFrontend)
+    dependsOn(copyBackend)
+}
+def webDockerName = "web_docker"
+task runWebDocker() {
+    onlyIf {
+        def exists = dockerContainerExists(webDockerName)
+        if (exists) {
+            println("${webDockerName} already exists, do nothing.")
+        }
+        return !exists
+    }
+    doLast {
+        startDockerContainer(webDockerName, webImage)
+        println("${webDockerName} started.")
+    }
+}
+task stopWebDocker() {
+    onlyIf {
+        def exists = dockerContainerExists(webDockerName)
+        if (!exists) {
+            println("${webDockerName} not exists, do nothing.")
+        }
+        return exists
+    }
+    doLast {
+        stopDockerContainer(webDockerName)
+    }
+}
+def rebuild = Boolean.valueOf(String.valueOf(project.findProperty("rebuild"))) ?: false
+task restartWebDocker() {
+    doLast {
+        def exists = dockerContainerExists(webDockerName)
+        if (exists) {
+            stopDockerContainer(webDockerName)
+        }
+        startDockerContainer(webDockerName, webImage)
+    }
+    if (rebuild) {
+        dependsOn(buildWebImage)
+    }
+}
