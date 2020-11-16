@@ -1,0 +1,21 @@
+buildscript {
+    repositories aliyun_repositories
+}
+plugins {
+    id "java"
+}
+repositories.clear()
+repositories.addAll(buildscript.repositories)
+
+group = "${project.main_group}.${project.getName()}"
+sourceCompatibility = project.java_version
+targetCompatibility = project.java_version
+
+dependencies {
+    implementation(project(":multi_java_project:common"))
+    testImplementation("junit:junit:4.12")
+}
+
+test {
+    useJUnit()
+}

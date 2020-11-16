@@ -1,0 +1,23 @@
+plugins {
+    id "cpp-application"
+    id "cpp-unit-test"
+}
+application {
+    targetMachines.add(machines.macOS.x86_64)
+    targetMachines.add(machines.linux.x86_64)
+    targetMachines.add(machines.windows.x86_64)
+}
+task exeTests(type: Exec) {
+    executable(project.file("build/exe/test/cpp_projectTest"))
+    doFirst {
+        println("running command: ${String.join(" ", getCommandLine())}")
+    }
+    dependsOn(build)
+}
+task exeMain(type: Exec) {
+    executable(project.file("build/exe/main/debug/cpp_project"))
+    doFirst {
+        println("running command: ${String.join(" ", getCommandLine())}")
+    }
+    dependsOn(exeTests)
+}

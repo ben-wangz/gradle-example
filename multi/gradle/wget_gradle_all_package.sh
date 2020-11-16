@@ -1,0 +1,1 @@
+../../boxed-hello/gradle/wget_gradle_all_package.sh

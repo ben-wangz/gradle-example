@@ -1,0 +1,6 @@
+rootProject.name = "multi"
+include "cpp_project"
+include "java_project"
+include "multi_java_project:common"
+include "multi_java_project:features"
+include "multi_java_project:dist"
