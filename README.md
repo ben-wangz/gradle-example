@@ -1,4 +1,4 @@
-### 习惯于maven 的java
+### gradle-example
 
 * 对于java 工程师来说，maven 深入人心，有些细节，知道很烦，但是还得用
 * springboot 本身的编译从今年6月份开始迁移到gradle: https://spring.io/blog/2020/06/08/migrating-spring-boot-s-build-to-gradle
